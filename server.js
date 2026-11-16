@@ -57,10 +57,6 @@ export const server = http.createServer(async (req, res) => {
 });
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   server.listen(process.env.PORT || 3000, () =>
-<<<<<<< HEAD
     console.log("MD-Blog static preview: http://localhost:3000"),
-=======
-    console.log(`MD-Blog static preview on port ${process.env.PORT || 3000}`),
->>>>>>> b1caf7813e25e7e93d8f636e9120c64f9f2a1b13
   );
 }
