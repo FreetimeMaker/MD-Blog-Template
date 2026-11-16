@@ -1,89 +1,69 @@
-# 🚀 MD Blog
+# MDXpress Blog
 
-**MD Blog** is a serverless-friendly version of the original [MDXpress Blog](https://github.com/eshan-singh78/MDXpress-Blog/), reworked to deploy seamlessly on platforms like **Vercel** using **Serverless Functions**.
+A static Markdown blog based on [MD-Blog](https://github.com/FreetimeMaker/MD-Blog). Posts and categories come exclusively from local files in `public/blogs`, including nested directories. Neither the build nor the browser uses an external blog API. Node.js 24 or newer is needed for builds and local previews, not for production hosting.
 
-It’s a markdown-powered, minimal blogging platform that compiles content on-the-fly without any backend server, database, or complex setup.
+## Features
 
-## 📁 Project Structure
+- Markdown rendered with Marked; post HTML sanitized with DOMPurify. Both libraries are bundled locally rather than loaded from a CDN.
+- Title-based URLs, compatible filename-slug links and legacy query/API paths.
+- Case-insensitive category AND filtering, newest-first publication order, and localized Discord timestamps, including relative times refreshed every 30 seconds.
+- Persistent light/dark theme, responsive styles and updated icon navigation.
+- Static output with a GitHub Pages workflow and automated rendering, routing and security tests.
 
-```
-mdxpress-blog-cnp/
-├── api/                 # Serverless function handlers
-│   ├── index.js         # Homepage rendering
-│   ├── blog.js          # Blog listing route
-│   └── blog/[slug].js   # Dynamic blog rendering
-├── public/
-│   ├── blogs/           # Markdown files for each blog post
-│   ├── styles/          # CSS with dark mode support
-│   └── views/           # HTML templates
-├── vercel.json          # Vercel routing and config
-├── package.json         # Metadata and dependencies
-└── README.md            # This file
+## Local development
+
+```sh
+npm ci
+npm run dev
 ```
 
----
+Open `http://localhost:3000`. `npm start` does the same; `PORT` changes the preview port. The preview serves only `dist`. Restart after changing source files; there is no watcher.
 
-## 🧪 How to Run Locally
-
-1. **Clone the Repository**
-
-   ```bash
-   git clone https://github.com/FreetimeMaker/MD-Blog
-   cd MD-Blog
-   ```
-
-2. **Install Dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Run Locally with Vercel**
-
-   ```bash
-   vercel dev
-   ```
-
-4. **Visit the App**
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## 🚀 How to deploy it on Vercel?
-
-1. Fork this Repository or click on 'Use this Template'.
-2. Clone it to your Machine with
-
-```bash
-git clone https://github.com/FreetimeMaker/MDXpress-Blog-CPN-But-Better MD-Blog
-cd MD-Blog
+```sh
+npm run build
+npm test
 ```
 
-3. Configure it how you like.
-4. Commit and push your local changes to github with
+Build before running tests. The build recursively reads Markdown into `dist/data/local-posts.json`, renders the homepage and generates blog shells for title-based paths and filename aliases. It validates local routes before replacing the previous output. Duplicate filename slugs, ambiguous title paths and unsafe slugs fail the build. No network discovery or API credentials are needed. Installing npm dependencies still requires access to the package registry.
 
-```bash
-git add .
-git commit -m "Configured MD-Blog"
-git push
+## Editing content
+
+Create a `.md` file in `public/blogs` (or a subdirectory):
+
+```markdown
+# My First Post
+
+## **Released on <t:1788258000:F> (<t:1788258000:R>)**
+
+## **Categories: Releases, Apps**
+
+This is my **post**.
 ```
 
-5. Login to [Vercel](https://vercel.com).
-6. Login via [GitHub](https://github.com).
-7. Add your [GitHub](https://github.com) Repository and deploy it like it is.
-8. Define a Custom Domain or use the [Vercel](https://vercel.com) Subdomain.
-9. Your finished.
+The first H1 supplies the title, falling back to the filename. Categories are optional and comma-separated. A `Released on` timestamp supplies the publication date for sorting; undated posts follow dated ones. Rebuild and redeploy after editing or adding posts.
 
-## 📌 How It Works on Vercel
+Edit `public/md/index.md` for the homepage, `public/views/home.html` for the shared shell, `public/styles/style.css` for styling and `public/scripts/` for browser behaviour. Homepage Markdown is trusted repository content rendered at build time. Post Markdown is sanitized in the browser; executable HTML, event handlers and unsafe links are removed.
 
-- All backend logic is handled via Serverless Functions in `/api`.
-- Static assets (styles, markdown files) are served from `/public`.
-- HTML templates are combined with rendered Markdown and returned as HTML.
+## Routes
 
----
+- `/`: pre-rendered homepage, readable without JavaScript.
+- `/blog/`: post list; `?category=Releases,Apps` selects posts with both categories.
+- `/blog/my-first-post/`: title-based post route.
+- `/blog/<filename-slug>/`: compatible filename alias.
+- `/blog/?post=<filename-slug>` and `/api/blog/<filename-slug>`: legacy links.
 
-## 🙋‍♂️ About the Creator
+Titles are normalized into lowercase ASCII hyphenated paths, for example `XMRiGUI Update V2.0.0` becomes `/blog/xmrigui-update-v2-0-0/`. Renaming a title changes its title path; filename aliases remain compatible. Browser navigation and canonical URLs use the current site's origin, not the upstream domain.
 
-Crafted by [Freetime Maker](mailto:FreetimeMaker@proton.me), a Android and Web dev & enthusiast exploring the balance of performance and simplicity in web apps.
+Posts are rendered from the bundled local JSON using JavaScript. Generated blog pages contain shells and canonical metadata, not server-rendered post content. Unknown paths use `404.html` and display a not-found message. On GitHub Pages, legacy `/api/` fallback URLs retain HTTP 404 even if the browser displays a matching post.
 
----
+## Deployment
+
+`.github/workflows/pages.yml` builds, tests and deploys `dist` on pushes to `main` or manual dispatch. In repository **Settings → Pages → Build and deployment**, select **GitHub Actions**. For another static host, build with `npm run build` and publish `dist`; configure its 404 page as appropriate. The former Vercel serverless handlers and routing configuration are no longer used.
+
+Assets use root-relative paths. Serve this site at a domain root; GitHub Pages project subpaths such as `/repository-name/` require base-path changes. No upstream custom domain is imposed. To use your own domain, add a root `CNAME` file and configure DNS/Pages separately; the build copies that file if present.
+
+The existing Google Fonts stylesheet still makes external font requests. Blog data and bundled rendering libraries do not use an external API or CDN.
+
+## License
+
+Created by [Freetime Maker](https://github.com/FreetimeMaker). GPL-3.0-only; see [LICENSE.txt](LICENSE.txt). Marked and DOMPurify retain their upstream licenses in npm dependencies.
